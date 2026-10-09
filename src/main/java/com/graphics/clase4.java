@@ -13,6 +13,7 @@ public class clase4 extends clase3 {
 
     // ==================== 1. ESTADO DEL JUEGO ====================
     private boolean mostrarMapa = true; // Muestra el minimapa desde el inicio.
+    private boolean pausado = false; // Permite pausar/reanudar la simulación con la tecla P.
     private int entregas = 0; // Cuenta las entregas completadas; también identifica el siguiente destino.
     private float tiempo = 0; // Acumula los segundos de la partida hasta completar el recorrido.
     private static final float[][] DESTINOS = { // Cada fila contiene X y Z de una parada sobre la calle de la ciudad ampliada.
@@ -90,12 +91,15 @@ public class clase4 extends clase3 {
 
     // ==================== 2. CONTROLES Y REINICIO ====================
 
-    /** Añade el interruptor del minimapa a los controles anteriores. */
+    /** Añade el interruptor del minimapa y la pausa a los controles anteriores. */
     @Override // Amplía las teclas definidas por clase3.
     protected void tecla(int key) {
         super.tecla(key); // Conserva salida, cámara, reinicio y luces.
         if (key == GLFW_KEY_M) { // Comprueba si se pulsó la tecla del mapa.
             mostrarMapa = !mostrarMapa; // Alterna entre mostrar y ocultar la vista superior.
+        }
+        if (key == GLFW_KEY_P) { // Comprueba la tecla de pausa de la simulación.
+            pausado = !pausado; // Alterna el estado de pausa del juego.
         }
     }
 
@@ -105,6 +109,7 @@ public class clase4 extends clase3 {
         super.reiniciar(); // Restaura posición, velocidad y orientación del vehículo del jugador.
         entregas = 0; // Vuelve a seleccionar la primera parada.
         tiempo = 0; // Reinicia el cronómetro de la partida.
+        pausado = false; // Quita la pausa si estaba activa.
         for (AutoTrafico auto : trafico) { // Recorre los vehículos autónomos.
             auto.reiniciar(); // Regresa cada vehículo al inicio de su circuito.
         }
@@ -115,6 +120,10 @@ public class clase4 extends clase3 {
     /** Actualiza el vehículo, los autos de tráfico y comprueba paradas. */
     @Override // Añade el objetivo del juego y tráfico al movimiento heredado.
     protected void actualizar(float deltaTime) {
+        if (pausado) { // Comprueba si el usuario pausó la simulación.
+            actualizarTitulo(); // Actualiza el título indicando la pausa.
+            return; // No avanza físicas, movimiento ni cronómetro mientras esté en pausa.
+        }
         super.actualizar(deltaTime); // Procesa aceleración, giro, colisiones y título de la ventana.
         for (AutoTrafico auto : trafico) { // Actualiza cada vehículo autónomo por separado.
             auto.actualizar(deltaTime); // Mueve el auto siguiendo su circuito vial.
@@ -136,8 +145,11 @@ public class clase4 extends clase3 {
     /** Compone el progreso que se añade al título de la ventana. */
     @Override // Amplía los indicadores de día/noche y faros de clase3.
     protected String estadoExtra() {
+        if (pausado) { // Si está en pausa, muestra aviso destacado.
+            return " | [PAUSA: Pulsa P para reanudar]";
+        }
         String mensaje = super.estadoExtra(); // Recupera los indicadores de iluminación.
-        mensaje += " | M: mapa | "; // Muestra la tecla que alterna el minimapa.
+        mensaje += " | M: mapa | P: pausa | "; // Muestra las teclas de minimapa y pausa.
         if (entregas == DESTINOS.length) { // Selecciona el texto de victoria al completar las paradas.
             mensaje += "GANASTE en " + (int) tiempo + " s! R: reiniciar"; // Muestra tiempo final y opción de reinicio.
         } else { // Durante el recorrido muestra progreso e instrucciones.
@@ -253,6 +265,27 @@ public class clase4 extends clase3 {
                 }
             }
         }
+        dibujarSenalizacionSectores(); // Añade tótems de orientación con nombres de cuadrantes.
+    }
+
+    /** Distribuye tótems representativos de sectores urbanos en las avenidas cardinales. */
+    private void dibujarSenalizacionSectores() {
+        dibujarTotem(0, -48f, 0.22f, 0.50f, 0.88f);  // Tótem Avenida Norte (Azul cívico).
+        dibujarTotem(0, 48f, 0.20f, 0.75f, 0.38f);   // Tótem Boulevard Sur (Verde parque).
+        dibujarTotem(48f, 0, 0.95f, 0.65f, 0.15f);   // Tótem Distrito Este (Dorado comercial).
+        dibujarTotem(-48f, 0, 0.85f, 0.28f, 0.28f);  // Tótem Sector Oeste (Rojo residencial).
+    }
+
+    /** Construye un tótem urbano con zócalo, poste y cartel reflectante. */
+    private void dibujarTotem(float x, float z, float r, float g, float b) {
+        caja(x, 0.25f, z, 1.4f, 0.5f, 1.4f, 0.30f, 0.32f, 0.35f); // Base de hormigón.
+        caja(x, 1.8f, z, 0.28f, 3.2f, 0.28f, 0.15f, 0.18f, 0.22f); // Columna metálica oscura.
+        if (noche) {
+            entero("uEmision", 1); // Hace visible el cartel de noche.
+        }
+        caja(x, 3.6f, z, 2.4f, 1.0f, 0.35f, r, g, b); // Panel indicador del sector.
+        caja(x, 3.6f, z, 2.5f, 0.15f, 0.40f, 1.0f, 1.0f, 1.0f); // Franja reflectante blanca.
+        entero("uEmision", 0);
     }
 
     /** Construye cuatro árboles y un banco utilizando cajas. */

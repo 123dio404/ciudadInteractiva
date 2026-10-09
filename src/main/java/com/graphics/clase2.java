@@ -93,7 +93,7 @@ public class clase2 extends clase1 {
     }
 
     /** Compone el texto de la ventana sin mezclarlo con las fórmulas de conducción. */
-    private void actualizarTitulo() {
+    protected void actualizarTitulo() {
         int kilometrosPorHora = Math.round(Math.abs(velocidad) * 3.6f); // Convierte m/s a km/h y redondea.
         String titulo = getClass().getSimpleName(); // Obtiene el nombre de la etapa que se está ejecutando.
         titulo += " | WASD/flechas: conducir | Espacio: freno"; // Añade los controles del vehículo.
