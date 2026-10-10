@@ -1,83 +1,134 @@
 # Ampliación de una Ciudad Interactiva con OpenGL (11 × 11)
 
-Proyecto práctico de Programación Gráfica (UAGRM) basado en la arquitectura de cuatro clases del Ing. Kenji Kawaida: Java 17, Maven, LWJGL 3.3.3, GLFW, OpenGL 3.3 Core, shaders GLSL, VAO y VBO. Toda la geometría se genera proceduralmente con código (sin texturas ni modelos externos).
+**Actividad práctica de Programación Gráfica — UAGRM**  
+Documento descriptivo y técnico del proyecto según los requisitos de entrega del enunciado.
 
-## Ejecutar
+---
 
-Abre una terminal en esta carpeta, donde está `pom.xml`:
+## 1. Instrucciones de ejecución
 
-```sh
-# Ejecutar la versión final ampliada con minimapa, entregas y tráfico autónomo:
+### Requisitos previos
+* **Java Development Kit (JDK):** Versión 17 o superior.
+* **Apache Maven:** Versión 3.8 o superior.
+* Tarjeta gráfica compatible con **OpenGL 3.3 Core Profile**.
+
+### Comando exacto para ejecutar la versión final
+Desde la terminal, situarse en el directorio raíz del proyecto (donde se encuentra `pom.xml`) y ejecutar:
+
+```bash
 mvn compile exec:exec
+```
 
-# O ejecutar etapas individuales:
+*(El archivo `pom.xml` tiene configurada por defecto la clase principal final `com.graphics.clase4`).*
+
+### Ejecución de etapas individuales (desarrollo progresivo)
+Si se desea verificar cada etapa de la arquitectura acumulativa:
+
+```bash
+# Etapa 1: Ciudad ampliada (11x11), matriz urbana y cámara orbital
 mvn compile exec:exec -DmainClass=com.graphics.clase1
+
+# Etapa 2: Físicas de conducción, colisiones y cámara de seguimiento
 mvn compile exec:exec -DmainClass=com.graphics.clase2
+
+# Etapa 3: Iluminación diurna/nocturna, farolas del entorno y faros del vehículo
 mvn compile exec:exec -DmainClass=com.graphics.clase3
+
+# Etapa 4: Versión final con decoración, semáforos, minimapa, entregas y tráfico
 mvn compile exec:exec -DmainClass=com.graphics.clase4
 ```
 
-*Nota:* Presiona **ESC** para cerrar la ventana. En macOS, el perfil Maven incluye automáticamente `-XstartOnFirstThread`.
+### Pruebas unitarias automatizadas
+Para comprobar la consistencia lógica de las calles transitables, límites de 110 unidades y detección de colisiones:
 
-## Estructura acumulativa de clases
-
-```text
-clase1: ciudad ampliada (11x11, 110x110 u), matriz, renderizador y cámara orbital
-  └── clase2 extends clase1: vehículo del jugador, físicas de conducción, colisiones y cámara
-        └── clase3 extends clase2: iluminación difusa, día/noche (N), 16 farolas y faros (F)
-              └── clase4 extends clase3: decoración urbana, semáforos animados, 4 entregas, minimapa (M) y tráfico autónomo
-```
-
-## Características implementadas según el enunciado
-
-1. **Ampliación urbana (11 × 11 celdas):**
-   * El mapa se amplió de 7×7 a **11×11 celdas** conservando el tamaño de celda (`CELDA = 10`), abarcando un mundo de **110 × 110 unidades** (`LIMITE = 55`).
-   * Distribución: **17 manzanas con edificios** de alturas y colores variados y **8 parques** con césped, árboles y bancos (supera el mínimo exigido de 12 edificios y 4 parques).
-   * Red vial continua con calles perimetrales e interiores que conectan todas las manzanas y paradas.
-   * Suelo, límites de colisión (`puedeCircular`), cámara orbital y cámara aérea adaptados a la nueva escala.
-
-2. **Iluminación:**
-   * Alternancia día y noche con la tecla **N** (luz ambiental azulada y luz direccional atenuada de noche).
-   * **16 farolas** distribuidas en los sectores nuevos y periféricos con atenuación cuadrática/lineal y emisión cálida.
-   * **Faros delanteros del vehículo** orientados según el giro del auto con cono de luz suave (`smoothstep`) encendibles con **F**.
-   * Cálculo de luz difusa mediante normales y producto escalar de Lambert en el fragment shader.
-
-3. **Funciones y decoración urbana:**
-   * Parques con árboles (tronco y follaje) y bancos de madera.
-   * Edificios con ventanas iluminadas de noche en sus 4 fachadas.
-   * Pasos peatonales señalizados junto a las manzanas.
-   * Semáforos animados con secuencia automática: Verde (5 s), Amarillo (2 s), Rojo (5 s).
-   * **Minimapa simultáneo (tecla M):** Proyección superior ortográfica adaptada a la escala de 110 u (`divisor 58.0`) con encuadre perfecto al redimensionar la ventana, mostrando el auto del jugador (cian/blanco), la baliza dorada de entrega y los autos de tráfico.
-   * **Reinicio (tecla R):** Restablece el auto a la esquina suroeste `(-50, 50)`, velocidad, orientación, cronómetro y entregas.
-
-4. **Sistema de entregas:**
-   * Recorrido de 4 paradas que atraviesan los cuadrantes de la ciudad ampliada (Noreste `(50, -50)`, Noroeste `(-50, -50)`, Centro comercial `(10, 10)` y retorno Suroeste `(-50, 50)`).
-   * Baliza dorada flotante y giratoria en la parada activa; para entregar se debe llegar a menos de 3 unidades y frenar a menos de 1 km/h.
-
-5. **Mejoras opcionales (+10 pts):**
-   * **Tráfico autónomo:** 3 vehículos independientes que circulan sin intervención del usuario por las calles (Taxi amarillo en circuito noreste, Patrulla azul en circuito noroeste/central, y Auto verde en circuito sur). Realizan giros en esquinas sin atravesar edificios ni salir del mapa.
-   * **Visualización en minimapa:** Los autos de tráfico son visibles en tiempo real en la vista superior con sus colores distintivos.
-
-## Controles
-
-| Tecla | Acción | Etapa |
-|---|---|---|
-| Flechas Izq / Der | Orbitar la ciudad | Clase 1 |
-| W / S o Flechas Arr / Aba | Acelerar / retroceder | Desde Clase 2 |
-| A / D o Flechas Izq / Der | Girar al moverse | Desde Clase 2 |
-| Espacio | Freno de mano | Desde Clase 2 |
-| C | Cámara de seguimiento / aérea general | Desde Clase 2 |
-| R | Reiniciar auto, tráfico y entregas | Desde Clase 2 |
-| N | Alternar Día / Noche | Desde Clase 3 |
-| F | Encender / apagar faros del auto | Desde Clase 3 |
-| M | Mostrar / ocultar minimapa | Clase 4 |
-| ESC | Salir de la aplicación | Todas |
-
-## Pruebas automatizadas
-
-Para ejecutar las pruebas lógicas unitarias (verificación de calles transitables, colisiones en aceras, límites de 110 u y reinicio):
-
-```sh
+```bash
 mvn test
 ```
 
+### Limpieza de archivos temporales previa a la entrega
+Para cumplir con la exclusión obligatoria de dependencias descargadas y temporales antes del empaquetado/entrega:
+
+```bash
+mvn clean
+```
+
+---
+
+## 2. Descripción del diseño de la ciudad
+
+* **Dimensiones y escala:**
+  * El mapa fue ampliado de la cuadrícula original de 7 × 7 a **11 × 11 celdas**, conservando el tamaño de cada celda (`CELDA = 10` unidades).
+  * Abarca un espacio tridimensional total de **110 × 110 unidades** en el plano XZ, con límites de circulación entre `[-55, 55]`.
+* **Distribución urbana:**
+  * **17 manzanas con edificios:** Variedad de alturas (desde edificios bajos de 6 unidades hasta torres de 24 unidades) y paletas cromáticas diferenciadas (tonos corporativos, residenciales y comerciales).
+  * **8 parques urbanos:** Distribuidos equilibradamente en cuadrantes periféricos e interiores, con áreas de césped verde, árboles modelados proceduralmente (tronco y copa) y bancos de descanso de madera.
+  * Supera ampliamente el mínimo exigido por el enunciado (12 manzanas de edificios y 4 parques).
+* **Red vial y conectividad:**
+  * Cuadrícula de calles vehiculares continuas (`CALLE = 0`), con vías perimetrales e interiores interconectadas.
+  * Garantiza el libre acceso vehicular a todos los cuadrantes, manzanas y puntos de entrega sin callejones sin salida.
+* **Coherencia del escenario:**
+  * El plano del suelo de asfalto (`y = 0`), las aceras elevadas (`y = 0.3`), los límites del mundo, el algoritmo de colisión AABB (`puedeCircular`), las cámaras de proyección y el visor del minimapa fueron completamente adaptados a la nueva escala de 110 unidades.
+
+---
+
+## 3. Controles
+
+| Tecla / Control | Función | Etapa disponible |
+|---|---|---|
+| **W** / **Flecha Arriba** | Acelerar el vehículo hacia adelante | Desde Clase 2 |
+| **S** / **Flecha Abajo** | Frenar y retroceder | Desde Clase 2 |
+| **A** / **Flecha Izquierda** | Girar dirección a la izquierda (con movimiento) | Desde Clase 2 |
+| **D** / **Flecha Derecha** | Girar dirección a la derecha (con movimiento) | Desde Clase 2 |
+| **Espacio** | Freno de mano instantáneo | Desde Clase 2 |
+| **C** | Alternar vista de cámara (Seguimiento en 3ª persona / Aérea cenital) | Desde Clase 2 |
+| **Flechas Izq / Der** *(en Clase 1)* | Orbitar la cámara alrededor de la ciudad | Clase 1 |
+| **N** | Alternar modo ambiental: **Día** / **Noche** | Desde Clase 3 |
+| **F** | Encender / apagar faros delanteros del automóvil | Desde Clase 3 |
+| **M** | Mostrar / ocultar minimapa simultáneo superior | Clase 4 |
+| **P** | Pausar / reanudar la simulación | Clase 4 |
+| **R** | **Reiniciar**: restablece posición inicial, orientación, velocidad, entregas y tráfico | Desde Clase 2 |
+| **ESC** | Cerrar la aplicación de forma segura | Todas |
+
+---
+
+## 4. Funciones implementadas
+
+### Arquitectura acumulativa de clases
+1. **`clase1` (Escenario base y renderizado):** Creación del buffer de vértices (VAO/VBO), matriz urbana 11×11, renderizado de edificios, suelo, aceras y cámara orbital.
+2. **`clase2` (Conducción y cámara):** Físicas de aceleración, rozamiento, marcha atrás, cálculo de colisiones contra aceras/edificios (`puedeCircular`) y cámara de seguimiento en 3ra persona.
+3. **`clase3` (Iluminación avanzada):**
+   * **Modo Día/Noche (tecla N):** Luz direccional solar con tono cálido de día y luz ambiental azulada nocturna que preserva visibilidad para conducir.
+   * **16 Farolas urbanas:** Distribuidas estratégicamente en calles y avenidas. Cuentan con atenuación radial cuadrática que ilumina tanto el pavimento como las fachadas de los edificios colindantes.
+   * **Faros del vehículo (tecla F):** Dos focos frontales fijados a la posición y ángulo del auto, con proyección cónica suave (`smoothstep`) y alcance limitado.
+   * **Cálculo difuso:** Sombreado de Lambert basado en normales de superficie calculado en el *fragment shader*.
+4. **`clase4` (Versión final completa):**
+   * **Decoración urbana:** Árboles y bancos en los parques, pasos peatonales en esquinas y ventanas en las fachadas de los edificios que simulan iluminación interna durante la noche.
+   * **Semáforos animados:** Temporizador cíclico autónomo con fases de Verde (5 s), Amarillo (2 s) y Rojo (5 s).
+   * **Minimapa simultáneo (tecla M):** Proyección ortográfica superior en la esquina superior derecha, orientada con el norte hacia arriba, encuadre constante independiente del redimensionamiento de ventana y representación en tiempo real del jugador, baliza y tráfico.
+   * **Sistema de entregas:** 4 paradas consecutivas que recorren los cuadrantes de la ciudad ampliada (Noreste, Noroeste, Centro comercial y retorno Suroeste) indicadas con una baliza dorada flotante.
+   * **Reinicio completo (tecla R):** Restablece el auto a la posición inicial `(-50, 50)`, velocidad a cero y reinicia el circuito de entregas.
+   * **Mejora opcional — Tráfico autónomo:** 3 vehículos controlados por computadora (un taxi amarillo, una patrulla azul y un sedán verde) que recorren rutas prefijadas por las calles realizando giros en intersecciones sin atravesar edificios ni salir del mapa.
+
+---
+
+## 5. Limitaciones
+
+* **Geometría puramente procedural (sin modelos externos ni mallas complejas):** Toda la geometría (vehículos, árboles, farolas, edificios) está construida mediante primitivas cúbicas y prismáticas directamente en memoria de vértices; no se utilizan archivos externos OBJ, FBX ni texturas de imagen rasterizadas (PNG/JPG).
+* **Física y colisiones simplificadas:** La detección de colisiones opera en el plano XZ usando comprobaciones AABB basadas en celdas de cuadrícula. No implementa físicas de cuerpo rígido con masa o momento de inercia angular ni deformación de malla.
+* **Iluminación sin sombreado proyectado (Shadow Mapping):** El cálculo de iluminación calcula aporte difuso y atenuación radial/cónica, pero no proyecta sombras dinámicas entre objetos (evitando el sobrecosto de pases de profundidad adicionales).
+* **Semáforos de carácter visual:** Los semáforos cambian de estado de forma realista mediante temporizadores, pero no detienen mecánicamente a los vehículos de tráfico ni al jugador (cumpliendo con lo indicado en el enunciado: *"El alcance obligatorio es visual: no se exige que detengan al automóvil"*).
+
+---
+
+## 6. Recursos y fragmentos externos utilizados
+
+* **Código de referencia y arquitectura:**
+  * Estructura base acumulativa de 4 clases propuesta por el **Ing. Kenji Kawaida** para la asignatura de *Programación Gráfica* (UAGRM).
+* **Bibliotecas externas:**
+  * **LWJGL 3.3.3 (Lightweight Java Game Library):**
+    * Módulos GLFW para la creación de ventana, contexto de renderizado y captura de eventos de teclado.
+    * Módulos OpenGL para bindings de funciones de **OpenGL 3.3 Core Profile**.
+  * **JUnit 3.8.1 / 4:** Utilizado exclusivamente en entorno de pruebas (`src/test/java`) para validación automatizada de las físicas de colisión y límites de cuadrícula.
+* **Shaders y modelos:**
+  * Los shaders en lenguaje **GLSL 330 core** (Vertex Shader y Fragment Shader) fueron programados directamente en el código fuente de las clases.
+  * No se utilizaron assets, modelos 3D, texturas ni librerías de sonido de terceros.
