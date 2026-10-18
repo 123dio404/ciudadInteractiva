@@ -31,17 +31,34 @@ public class ConduccionTest extends TestCase {
         assertTrue(juego.puedeCircular(-50, 50)); // Acepta la posición inicial en la esquina de la calle.
     }
 
-    /** Comprueba que el reinicio restaura la posición y detiene el vehículo. */
+    /** Comprueba que el reinicio restaura la posición y detiene el vehículo y la chata. */
     public void testReinicio() {
         clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
         juego.autoX = 12; // Simula que el auto se desplazó horizontalmente.
         juego.autoZ = 4; // Simula un desplazamiento en profundidad.
         juego.velocidad = 10; // Simula que el auto está avanzando.
         juego.angulo = 2; // Simula que el vehículo cambió de orientación.
+        juego.chataX = 14; // Simula desplazamiento de la chata.
+        juego.chataZ = 7;
+        juego.anguloChata = 2.1f;
         juego.reiniciar(); // Ejecuta el mismo reinicio que se activa con R.
         assertEquals(-50f, juego.autoX, 0f); // Exige recuperar la coordenada X inicial ampliada.
         assertEquals(50f, juego.autoZ, 0f); // Exige recuperar la coordenada Z inicial ampliada.
         assertEquals(0f, juego.velocidad, 0f); // Exige que el vehículo quede detenido.
         assertEquals(0f, juego.angulo, 0f); // Exige recuperar la dirección frontal inicial.
+        assertEquals(0f, juego.anguloChata, 0f); // Exige recuperar la dirección de la chata.
+        assertEquals(-50f, juego.chataX, 0.01f); // Exige recuperar posición X de la chata alineada.
+        assertEquals(53.2f, juego.chataZ, 0.01f); // Exige recuperar posición Z de la chata detrás del auto.
+    }
+
+    /** Comprueba que la chata respeta las colisiones con aceras, manzanas y bordes. */
+    public void testChataAcopladaYColisiones() {
+        clase2 juego = new clase2();
+        assertTrue(juego.puedeCircularChata(-50, 50)); // Calle transitable suroeste
+        assertTrue(juego.puedeCircularChata(0, 50)); // Cruce de calles sur
+        assertFalse(juego.puedeCircularChata(0, 0)); // Manzana central (edificio)
+        assertFalse(juego.puedeCircularChata(-20, -20)); // Parque
+        assertFalse(juego.puedeCircularChata(55, 0)); // Límite derecho fuera del mapa
+        assertFalse(juego.puedeCircularChata(0, -55)); // Límite norte fuera del mapa
     }
 }

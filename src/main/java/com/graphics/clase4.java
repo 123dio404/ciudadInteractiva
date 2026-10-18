@@ -406,6 +406,9 @@ public class clase4 extends clase3 {
             cajaGirada(auto.x, 24, auto.z, 2.0f, 0.1f, 2.8f, auto.r, auto.g, auto.b, auto.angulo);
         }
 
+        // Indicador de la chata acoplada en el minimapa (marrón madera con enganche)
+        cajaGirada(chataX, 24.5f, chataZ, 2.0f, 0.1f, 2.3f, 0.68f, 0.43f, 0.22f, anguloChata);
+
         // Indicador del vehículo del jugador (resaltado en cian y blanco)
         cajaGirada(autoX, 25, autoZ, 2.6f, 0.1f, 3.6f, 0.1f, 1, 1, angulo); // Marca la posición con un rectángulo cian orientado.
         float frenteX = -(float) Math.sin(angulo); // Calcula la dirección frontal en el eje X.
